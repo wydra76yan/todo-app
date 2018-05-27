@@ -17,6 +17,17 @@ import firebase from './firebase';
  const todosRef = rootRef.child('todoList');
 
 export default class TodoList extends React.Component {
+
+  static navigationOptions = {
+      title: 'Tasks list',
+      headerTitleStyle: {
+        color:'white',
+      },
+      headerStyle: {
+        backgroundColor: '#0dbc1e',
+      }
+};
+
   constructor(props) {
       super(props);
       this.state = ({
@@ -32,12 +43,12 @@ export default class TodoList extends React.Component {
                   title: doc.toJSON().title,
                   description: doc.toJSON().description
               });
-              this.setState({
-                  todos: todos.reverse((revArray) => {
+          });
+          this.setState({
+              todos: todos.reverse((revArray) => {
 
-                      return revArray;
-                  }),
-              });
+                  return revArray;
+              }),
           });
       });
   }
@@ -45,19 +56,35 @@ export default class TodoList extends React.Component {
   render() {
       return (
           <View >
-
               <FlatList
-                  data={this.state.todos}
-                  renderItem={({ item, index }) => {
+                  data = { this.state.todos }
+                  renderItem = {({ item, index }) => {
                       return (
-                        <View>
-                          <Text>{item.title}</Text>
-                          <Text>{item.description}</Text>
+                        <View style={styles.todo}>
+                          <Text style={styles.title}> { item.title } </Text>
+                          <Text style={styles.description}>{ item.description }</Text>
                         </View>);
-                  }}
-              >
+                  }}>
               </FlatList>
           </View>
       );
   }
 }
+
+const styles = StyleSheet.create({
+  todo: {
+    borderRadius: 25,
+    marginTop: 20,
+    padding: 10,
+    margin: 10,
+    backgroundColor: '#0dbc1e',
+  },
+  title: {
+    color: 'white',
+    fontSize: 20
+  },
+  description: {
+    color: 'white',
+    fontSize: 15
+  },
+});
