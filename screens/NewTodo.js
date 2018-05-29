@@ -1,6 +1,12 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Text, TextInput, Button, FlatList } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Text,
+  TextInput,
+  Button,
+  FlatList
+} from 'react-native';
 import t from 'tcomb-form-native';
 
 import { addItem } from "./Service";
@@ -40,6 +46,8 @@ handleSubmit = () => {
     );
   }
 }
+
+
 
   render() {
     return (

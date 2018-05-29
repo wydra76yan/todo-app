@@ -5,8 +5,8 @@ import {
   Text,
   View,
   FlatList,
-  TouchableHighLight,
   TextInput,
+  Button,
 } from 'react-native';
 
 import ReactNative from "react-native";
@@ -53,6 +53,11 @@ export default class TodoList extends React.Component {
       });
   }
 
+
+  handleRemove = (key) => {
+    return todosRef.child(key).remove();
+  }
+
   render() {
       return (
           <View >
@@ -63,7 +68,12 @@ export default class TodoList extends React.Component {
                         <View style={styles.todo}>
                           <Text style={styles.title}> { item.title } </Text>
                           <Text style={styles.description}>{ item.description }</Text>
-                        </View>);
+                          <Button
+                            title="Delete"
+                            onPress={() => this.handleRemove(item.key)}
+                            />
+                        </View>
+                      );
                   }}>
               </FlatList>
           </View>
