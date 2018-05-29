@@ -34,6 +34,7 @@ export default class TodoList extends React.Component {
           todos: [],
       });
   }
+
   componentDidMount() {
       todosRef.on('value', (childSnapshot) => {
           const todos = [];
@@ -58,6 +59,13 @@ export default class TodoList extends React.Component {
     return todosRef.child(key).remove();
   }
 
+  handleUpdate = (key) => {
+    const newTodo = {
+      isLiked: true,
+    }
+    return todosRef.child(key).update(newTodo);
+  }
+
   render() {
       return (
           <View >
@@ -67,10 +75,14 @@ export default class TodoList extends React.Component {
                       return (
                         <View style={styles.todo}>
                           <Text style={styles.title}> { item.title } </Text>
-                          <Text style={styles.description}>{ item.description }</Text>
+                          <Text style={styles.description}> { item.description } </Text>
                           <Button
                             title="Delete"
-                            onPress={() => this.handleRemove(item.key)}
+                            onPress={() => this.handleRemove( item.key )}
+                            />
+                          <Button
+                            title="Update"
+                            onPress={() => this.handleUpdate( item.key )}
                             />
                         </View>
                       );
