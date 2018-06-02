@@ -18,10 +18,10 @@ import firebase from './firebase';
 const rootRef = firebase.database().ref();
 const todosRef = rootRef.child('todoList');
 
-const Todo = t.struct({
-  title: t.String,
-  description: t.String,
-});
+// const Todo = t.struct({
+//   title: t.String,
+//   description: t.String,
+// });
 
 const Form = t.form.Form;
 
@@ -50,6 +50,10 @@ handleSubmit = () => {
 
 
   render() {
+    const Todo = t.struct({
+      title: t.String,
+      description: t.String,
+    });
     return (
       <View style={styles.container}>
         <Form

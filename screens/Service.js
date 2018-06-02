@@ -2,10 +2,10 @@ function addItem(value){
   const newItem = {
     ...value,
     isLiked: false,
-    completed: false,
-    // setting: false,
-     key: Date.now().toString(),
-    // comments:[]
+    isCompleted: false,
+    isSetting: false,
+    key: Date.now().toString(),
+    comments: ['kek', 'lol']
   };
   return newItem;
 }

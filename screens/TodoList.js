@@ -7,7 +7,10 @@ import {
   FlatList,
   TextInput,
   Button,
+  NavigatorIOS,
 } from 'react-native';
+
+import t from 'tcomb-form-native';
 
 import ReactNative from "react-native";
 
@@ -16,17 +19,31 @@ import firebase from './firebase';
  const rootRef = firebase.database().ref();
  const todosRef = rootRef.child('todoList');
 
-export default class TodoList extends React.Component {
+export default class listNav extends React.Component {
+  render(){
+    return(
+      <NavigatorIOS
+        initialRoute={{
+          component: TodoList,
+          title: 'Todo list',
+        }}
+        style = {{flex: 1}}
+      />
+    );
+  }
+}
 
-  static navigationOptions = {
-      title: 'Tasks list',
-      headerTitleStyle: {
-        color:'white',
-      },
-      headerStyle: {
-        backgroundColor: '#0dbc1e',
-      }
-};
+export class TodoList extends React.Component {
+
+//   static navigationOptions = {
+//       title: 'Tasks list',
+//       headerTitleStyle: {
+//         color:'white',
+//       },
+//       headerStyle: {
+//         backgroundColor: '#0dbc1e',
+//       }
+// };
 
   constructor(props) {
       super(props);
@@ -59,11 +76,28 @@ export default class TodoList extends React.Component {
     return todosRef.child(key).remove();
   }
 
-  handleUpdate = (key) => {
-    const newTodo = {
-      isLiked: true,
-    }
-    return todosRef.child(key).update(newTodo);
+
+
+  handleIsLiked = (key) => {
+    return firebase.database().ref('/todoList/' + key).once('value').then(function(snapshot) {
+      let value = !(snapshot.val() && snapshot.val().isLiked);
+      const newTodo = {
+        isLiked: value
+      }
+      return todosRef.child(key).update(newTodo);
+    });
+  }
+
+  handleIsSetting = (key, title, description) => {
+    this.props.navigator.push({
+      component: settingsView,
+      passProps: {
+        todoKey: key,
+        todoTitle: title,
+        todoDescription: description
+      },
+      title: 'Settings of '+ title + ' Todo',
+    })
   }
 
   render() {
@@ -80,9 +114,10 @@ export default class TodoList extends React.Component {
                             title="Delete"
                             onPress={() => this.handleRemove( item.key )}
                             />
+
                           <Button
-                            title="Update"
-                            onPress={() => this.handleUpdate( item.key )}
+                            title="Open Settings"
+                            onPress={() => this.handleIsSetting( item.key, item.title, item.description )}
                             />
                         </View>
                       );
@@ -90,6 +125,40 @@ export default class TodoList extends React.Component {
               </FlatList>
           </View>
       );
+  }
+}
+
+export class settingsView extends React.Component{
+
+  handleUpdate = (key) => {
+    const value = this._form.getValue();
+    return todosRef.child(key).update(value);
+  }
+
+  render(){
+    let preValue = {
+      title: this.props.todoTitle,
+      description: this.props.todoDescription,
+    }
+    const Todo = t.struct({
+      title: t.String,
+      description: t.String,
+    });
+    const Form = t.form.Form;
+    return(
+      <View style = {styles.popup}>
+        <Text>{this.props.todoKey}</Text>
+        <Form
+          value = {preValue}
+          ref={c => this._form = c}
+          type={Todo}
+          />
+        <Button
+          title="Add new"
+          onPress={() => this.handleUpdate( this.props.todoKey )}
+        />
+      </View>
+    );
   }
 }
 
@@ -108,5 +177,9 @@ const styles = StyleSheet.create({
   description: {
     color: 'white',
     fontSize: 15
+  },
+  popup:{
+    backgroundColor: '#0dbc1e',
+    marginTop: 330,
   },
 });
