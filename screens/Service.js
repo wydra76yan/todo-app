@@ -3,9 +3,8 @@ function addItem(value){
     ...value,
     isLiked: false,
     isCompleted: false,
-    isSetting: false,
     key: Date.now().toString(),
-    comments: ['kek', 'lol']
+    comments: null,
   };
   return newItem;
 }

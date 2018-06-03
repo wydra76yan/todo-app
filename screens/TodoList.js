@@ -8,6 +8,7 @@ import {
   TextInput,
   Button,
   NavigatorIOS,
+  TouchableOpacity,
 } from 'react-native';
 
 import t from 'tcomb-form-native';
@@ -88,13 +89,25 @@ export class TodoList extends React.Component {
     });
   }
 
-  handleIsSetting = (key, title, description) => {
+  handleIsCompleted = (key) => {
+    return firebase.database().ref('/todoList/' + key).once('value').then(function(snapshot) {
+      let value = !(snapshot.val() && snapshot.val().isCompleted);
+      const newTodo = {
+        isCompleted: value
+      }
+      return todosRef.child(key).update(newTodo);
+    });
+  }
+
+  handleIsSetting = (key, title, description, comments) => {
+    console.log(comments);
     this.props.navigator.push({
       component: settingsView,
       passProps: {
         todoKey: key,
         todoTitle: title,
-        todoDescription: description
+        todoDescription: description,
+        // todoComments: comments
       },
       title: 'Settings of '+ title + ' Todo',
     })
@@ -107,17 +120,22 @@ export class TodoList extends React.Component {
                   data = { this.state.todos }
                   renderItem = {({ item, index }) => {
                       return (
-                        <View style={styles.todo}>
-                          <Text style={styles.title}> { item.title } </Text>
-                          <Text style={styles.description}> { item.description } </Text>
+                         <View style={styles.todo}>
+                          <TouchableOpacity onPress={() => this.handleIsCompleted( item.key )}>
+                            <Text style={styles.title}> { item.title } </Text>
+                            <Text style={styles.description}> { item.description } </Text>
+                          </TouchableOpacity>
                           <Button
                             title="Delete"
                             onPress={() => this.handleRemove( item.key )}
                             />
-
+                          <Button
+                            title="Like"
+                            onPress={() => this.handleIsLiked( item.key )}
+                            />
                           <Button
                             title="Open Settings"
-                            onPress={() => this.handleIsSetting( item.key, item.title, item.description )}
+                            onPress={() => this.handleIsSetting( item.key, item.title, item.description, item.comments )}
                             />
                         </View>
                       );
@@ -130,9 +148,38 @@ export class TodoList extends React.Component {
 
 export class settingsView extends React.Component{
 
+  constructor(props) {
+      super(props);
+      this.state = ({
+          comments: [],
+      });
+  }
+
+  componentDidMount() {
+      todosRef.child(this.props.todoKey + '/comments/').on('value', (childSnapshot) => {
+          const comments = [];
+          childSnapshot.forEach((doc) => {
+               comments.push({
+                  comments: doc.toJSON().comments
+              });
+          });
+          this.setState({
+              comments: comments.reverse((revArray) => {
+                  return revArray;
+              }),
+          });
+      });
+  }
+
   handleUpdate = (key) => {
     const value = this._form.getValue();
     return todosRef.child(key).update(value);
+  }
+
+  handleComment = (key) => {
+    const value = this._form_t.getValue();
+    console.log(this.props.todoComments);
+    return todosRef.child(key + '/comments/').push(value);
   }
 
   render(){
@@ -144,19 +191,45 @@ export class settingsView extends React.Component{
       title: t.String,
       description: t.String,
     });
+    const Comments = t.struct({
+      comments: t.String,
+    });
     const Form = t.form.Form;
     return(
-      <View style = {styles.popup}>
-        <Text>{this.props.todoKey}</Text>
-        <Form
-          value = {preValue}
-          ref={c => this._form = c}
-          type={Todo}
+      <View>
+        <View style = {styles.popup}>
+          <Form
+            value = {preValue}
+            ref={c => this._form = c}
+            type={Todo}
+            />
+          <Button
+            title="Add new"
+            onPress={() => this.handleUpdate( this.props.todoKey )}
           />
-        <Button
-          title="Add new"
-          onPress={() => this.handleUpdate( this.props.todoKey )}
-        />
+        </View>
+        <View>
+          <Form
+            ref={c => this._form_t = c}
+            type={Comments}
+            />
+          <Button
+            title="Add new"
+            onPress={() => this.handleComment( this.props.todoKey )}
+          />
+        </View>
+        <View >
+            <FlatList
+                data = { this.state.comments }
+                renderItem = {({ item, index }) => {
+                    return (
+                       <View style={styles.todo}>
+                         <Text> { item.comments } </Text>
+                       </View>
+                    );
+                }}>
+            </FlatList>
+        </View>
       </View>
     );
   }
@@ -180,6 +253,6 @@ const styles = StyleSheet.create({
   },
   popup:{
     backgroundColor: '#0dbc1e',
-    marginTop: 330,
+    marginTop: 80,
   },
 });
