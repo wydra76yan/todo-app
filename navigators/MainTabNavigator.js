@@ -9,6 +9,7 @@ import TabBarLabel from '../components/TabBarLabel';
 
 import NewTodo from '../screens/NewTodo';
 import TodoList from '../screens/TodoList';
+import SettingsNavigation from '../screens/SettingsNavigation'
 
 const AddNewStack = createStackNavigator({
   New: NewTodo,
@@ -36,7 +37,7 @@ AddNewStack.navigationOptions = {
 };
 
 const ListStack = createStackNavigator({
-  List: TodoList,
+  List: SettingsNavigation,
 });
 
 ListStack.navigationOptions = {

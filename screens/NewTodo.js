@@ -1,12 +1,10 @@
 import React from 'react';
 import {
   View,
-  StyleSheet,
-  Text,
-  TextInput,
   Button,
-  FlatList
+  StyleSheet,
 } from 'react-native';
+
 import t from 'tcomb-form-native';
 
 import { addItem } from "./Service";
@@ -18,12 +16,7 @@ import firebase from './firebase';
 const rootRef = firebase.database().ref();
 const todosRef = rootRef.child('todoList');
 
-// const Todo = t.struct({
-//   title: t.String,
-//   description: t.String,
-// });
 
-const Form = t.form.Form;
 
 export default class NewTodo extends React.Component {
 
@@ -49,11 +42,12 @@ handleSubmit = () => {
 
 
 
-  render() {
+render() {
     const Todo = t.struct({
       title: t.String,
       description: t.String,
     });
+    const Form = t.form.Form;
     return (
       <View style={styles.container}>
         <Form

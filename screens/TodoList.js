@@ -14,37 +14,15 @@ import {
 import t from 'tcomb-form-native';
 
 import ReactNative from "react-native";
-
+import { completedTodo, likedTodo } from "./Service";
 import firebase from './firebase';
+
+import SettingsView from './SettingsView';
 
  const rootRef = firebase.database().ref();
  const todosRef = rootRef.child('todoList');
 
-export default class listNav extends React.Component {
-  render(){
-    return(
-      <NavigatorIOS
-        initialRoute={{
-          component: TodoList,
-          title: 'Todo list',
-        }}
-        style = {{flex: 1}}
-      />
-    );
-  }
-}
-
-export class TodoList extends React.Component {
-
-//   static navigationOptions = {
-//       title: 'Tasks list',
-//       headerTitleStyle: {
-//         color:'white',
-//       },
-//       headerStyle: {
-//         backgroundColor: '#0dbc1e',
-//       }
-// };
+export default class TodoList extends React.Component {
 
   constructor(props) {
       super(props);
@@ -54,60 +32,42 @@ export class TodoList extends React.Component {
   }
 
   componentDidMount() {
-      todosRef.on('value', (childSnapshot) => {
-          const todos = [];
-          childSnapshot.forEach((doc) => {
-               todos.push({
-                  key: doc.key,
-                  title: doc.toJSON().title,
-                  description: doc.toJSON().description
-              });
-          });
-          this.setState({
-              todos: todos.reverse((revArray) => {
-
-                  return revArray;
-              }),
-          });
-      });
+    todosRef.on('value', (childSnapshot) => {
+        const todos = [];
+        childSnapshot.forEach((doc) => {
+             todos.push({
+                key: doc.key,
+                title: doc.toJSON().title,
+                description: doc.toJSON().description
+            });
+        });
+        this.setState({
+            todos: todos.reverse((revArray) => {
+                return revArray;
+            }),
+        });
+    });
   }
-
 
   handleRemove = (key) => {
     return todosRef.child(key).remove();
   }
 
-
-
   handleIsLiked = (key) => {
-    return firebase.database().ref('/todoList/' + key).once('value').then(function(snapshot) {
-      let value = !(snapshot.val() && snapshot.val().isLiked);
-      const newTodo = {
-        isLiked: value
-      }
-      return todosRef.child(key).update(newTodo);
-    });
+    return likedTodo(key)
   }
 
   handleIsCompleted = (key) => {
-    return firebase.database().ref('/todoList/' + key).once('value').then(function(snapshot) {
-      let value = !(snapshot.val() && snapshot.val().isCompleted);
-      const newTodo = {
-        isCompleted: value
-      }
-      return todosRef.child(key).update(newTodo);
-    });
+    return completedTodo(key);
   }
 
-  handleIsSetting = (key, title, description, comments) => {
-    console.log(comments);
+  handleIsSetting = (key, title, description) => {
     this.props.navigator.push({
-      component: settingsView,
+      component: SettingsView,
       passProps: {
         todoKey: key,
         todoTitle: title,
         todoDescription: description,
-        // todoComments: comments
       },
       title: 'Settings of '+ title + ' Todo',
     })
@@ -135,7 +95,7 @@ export class TodoList extends React.Component {
                             />
                           <Button
                             title="Open Settings"
-                            onPress={() => this.handleIsSetting( item.key, item.title, item.description, item.comments )}
+                            onPress={() => this.handleIsSetting( item.key, item.title, item.description)}
                             />
                         </View>
                       );
@@ -146,94 +106,7 @@ export class TodoList extends React.Component {
   }
 }
 
-export class settingsView extends React.Component{
 
-  constructor(props) {
-      super(props);
-      this.state = ({
-          comments: [],
-      });
-  }
-
-  componentDidMount() {
-      todosRef.child(this.props.todoKey + '/comments/').on('value', (childSnapshot) => {
-          const comments = [];
-          childSnapshot.forEach((doc) => {
-               comments.push({
-                  comments: doc.toJSON().comments
-              });
-          });
-          this.setState({
-              comments: comments.reverse((revArray) => {
-                  return revArray;
-              }),
-          });
-      });
-  }
-
-  handleUpdate = (key) => {
-    const value = this._form.getValue();
-    return todosRef.child(key).update(value);
-  }
-
-  handleComment = (key) => {
-    const value = this._form_t.getValue();
-    console.log(this.props.todoComments);
-    return todosRef.child(key + '/comments/').push(value);
-  }
-
-  render(){
-    let preValue = {
-      title: this.props.todoTitle,
-      description: this.props.todoDescription,
-    }
-    const Todo = t.struct({
-      title: t.String,
-      description: t.String,
-    });
-    const Comments = t.struct({
-      comments: t.String,
-    });
-    const Form = t.form.Form;
-    return(
-      <View>
-        <View style = {styles.popup}>
-          <Form
-            value = {preValue}
-            ref={c => this._form = c}
-            type={Todo}
-            />
-          <Button
-            title="Add new"
-            onPress={() => this.handleUpdate( this.props.todoKey )}
-          />
-        </View>
-        <View>
-          <Form
-            ref={c => this._form_t = c}
-            type={Comments}
-            />
-          <Button
-            title="Add new"
-            onPress={() => this.handleComment( this.props.todoKey )}
-          />
-        </View>
-        <View >
-            <FlatList
-                data = { this.state.comments }
-                renderItem = {({ item, index }) => {
-                    return (
-                       <View style={styles.todo}>
-                         <Text> { item.comments } </Text>
-                       </View>
-                    );
-                }}>
-            </FlatList>
-        </View>
-      </View>
-    );
-  }
-}
 
 const styles = StyleSheet.create({
   todo: {
